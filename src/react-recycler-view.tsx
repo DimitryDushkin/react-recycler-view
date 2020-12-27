@@ -1,4 +1,5 @@
 import React, { Fragment, RefObject, useEffect, useRef, useState } from 'react';
+import { clamp } from './utils';
 
 type ItemGeneric = { id: string | number };
 
@@ -61,7 +62,7 @@ function useRecycler<T>(
     }
 
     const containerHeight = items.length * itemHeight;
-    container.style.height = `${containerHeight}px`;
+    container.style.minHeight = `${containerHeight}px`;
     container.style.position = 'relative';
 
     const itemsLayout: { top: number; item: T }[] = [];
@@ -73,30 +74,20 @@ function useRecycler<T>(
     }
 
     const renderItems = () => {
-      const { top, bottom } = container.getBoundingClientRect();
+      const { top, height } = container.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const overscanMarginTop = overscanWindow * viewportHeight;
       const overscanMarginBottom = overscanWindow * viewportHeight;
-      const isVisible =
-        top - (window.innerHeight + overscanMarginTop) < 0 &&
-        bottom + overscanMarginBottom >= 0;
-
-      console.log('top, bottom');
-      console.log(top, bottom);
+      const clamper = clamp(0, height);
+      const visibleFrom = clamper(-top - overscanMarginTop);
+      const visibleTo = clamper(-top + viewportHeight + overscanMarginBottom);
+      const isVisible = visibleTo !== visibleFrom;
 
       if (!isVisible) {
         return;
       }
 
-      // @TODO: перевести все в какую-то одну систему координат
-      const visibleFrom =
-        viewportHeight - top < 0
-          ? 0
-          : Math.max(0, Math.abs(top) - overscanMarginTop);
-      const visibleTo = Math.abs(top) + viewportHeight + overscanMarginBottom;
       const itemsToRender: { top: number; item: T }[] = [];
-      console.log('visibleFrom, visibleTo');
-      console.log(visibleFrom, visibleTo);
 
       for (const itemLayout of itemsLayout) {
         if (itemLayout.top > visibleFrom && itemLayout.top < visibleTo) {
