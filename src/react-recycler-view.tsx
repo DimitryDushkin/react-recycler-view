@@ -67,6 +67,11 @@ function useRecycler<T>(
 
     const itemsLayout: { top: number; item: T }[] = [];
     for (let i = 0; i < items.length; i++) {
+      // TODO: support absence of item's height
+      // intoduce two step model:
+      // 1. visbility: hidden render to measure height
+      // 2. save height, render only visible
+      // do it in batch, algorithm for selecting next batch is needed
       itemsLayout.push({
         top: i * itemHeight,
         item: items[i],
@@ -89,6 +94,7 @@ function useRecycler<T>(
 
       const itemsToRender: { top: number; item: T }[] = [];
 
+      // TODO: add more effective way to get items to render (interval tree)
       for (const itemLayout of itemsLayout) {
         if (itemLayout.top > visibleFrom && itemLayout.top < visibleTo) {
           itemsToRender.push(itemLayout);
